@@ -91,10 +91,12 @@ export default function Footer() {
       </div>
       
       <div className="max-w-7xl mx-auto px-6 pt-6 border-t border-white/5 flex flex-col md:flex-row items-center justify-between text-[11px] uppercase tracking-[0.2em]">
-        <div className="flex items-center gap-2 mb-4 md:mb-0 text-slate-300 hover:text-orange-500 transition-colors">
-          <Shield className="w-4 h-4 text-orange-500" />
-          <Link to="/admin" className="font-bold">এডমিন প্যানেল (Admin Panel)</Link>
-        </div>
+        {localStorage.getItem('admin_logged_in_once') !== 'true' && (
+          <div className="flex items-center gap-2 mb-4 md:mb-0 text-slate-300 hover:text-orange-500 transition-colors">
+            <Shield className="w-4 h-4 text-orange-500" />
+            <Link to="/admin" className="font-bold">এডমিন প্যানেল (Admin Panel)</Link>
+          </div>
+        )}
         <div className="text-slate-500 text-center md:text-right">© {new Date().getFullYear()} {siteSettings.storeName}</div>
       </div>
     </footer>

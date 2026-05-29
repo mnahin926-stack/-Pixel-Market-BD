@@ -1,7 +1,7 @@
 import { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../../store';
-import { Shield, Lock, User, Chrome } from 'lucide-react';
+import { Shield, Lock, User, Chrome, ArrowRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { sha256Sync } from '../../utils';
 import { auth, db } from '../../firebase';
@@ -11,22 +11,26 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 export default function AdminLogin() {
   const [emailOrUser, setEmailOrUser] = useState('');
   const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
+  const [otpCode, setOtpCode] = useState('');
+  const [pendingStaff, setPendingStaff] = useState<any>(null);
+  const [pendingIsMaster, setPendingIsMaster] = useState(false);
+
   const setAdminAuthenticated = useStore((state) => state.setAdminAuthenticated);
   const roles = useStore((state) => state.roles);
   const navigate = useNavigate();
 
-  const handleLogin = (e: FormEvent) => {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
     
     if (!emailOrUser.trim() || !password) {
-      toast.error('দয়া করে ইমেইল/ইউজারনেম এবং পাসওয়ার্ড প্রদান করুন!');
+      toast.error('•');
       return;
     }
 
     const enteredInput = emailOrUser.trim().toLowerCase();
     const enteredPassHash = sha256Sync(password);
 
-    // Find staff role where email matches or name matches
     const matchedStaff = roles.find(rl => 
       (rl.email.toLowerCase() === enteredInput || rl.name.toLowerCase() === emailOrUser.trim().toLowerCase()) &&
       rl.passwordHash === enteredPassHash
@@ -34,14 +38,28 @@ export default function AdminLogin() {
 
     if (matchedStaff) {
       if (matchedStaff.status !== 'Active') {
-        toast.error('আপনার অ্যাডমিন প্যানেল অ্যাকাউন্টটি বর্তমানে নিষ্ক্রিয় রয়েছে!');
+        toast.error('•');
         return;
       }
-      setAdminAuthenticated(true, matchedStaff);
-      toast.success(`${matchedStaff.name} হিসেবে লগইন সফল হয়েছে!`);
-      navigate('/admin/dashboard');
+
+      // Write login attempt notification to Firestore
+      try {
+        await setDoc(doc(db, 'login_notifications', `${Date.now()}`), {
+          email: matchedStaff.email,
+          name: matchedStaff.name,
+          timestamp: new Date().toISOString(),
+          status: 'Pending OTP Verification',
+          type: 'Standard Login'
+        });
+      } catch (err) {
+        console.error(err);
+      }
+
+      setPendingStaff(matchedStaff);
+      setPendingIsMaster(matchedStaff.email.toLowerCase() === 'pixelmarketbd2026@gmail.com');
+      setStep('otp');
     } else {
-      toast.error('ভুল ইমেইল/ইউজারনেম বা পাসওয়ার্ড! অ্যাক্সেস প্রত্যাখ্যাত।');
+      toast.error('•');
     }
   };
 
@@ -52,7 +70,7 @@ export default function AdminLogin() {
       const user = result.user;
       
       if (!user.email) {
-        toast.error('আপনার গুগল অ্যাকাউন্টের সাথে কোনো ইমেইল যুক্ত নেই!');
+        toast.error('•');
         return;
       }
 
@@ -73,105 +91,180 @@ export default function AdminLogin() {
         };
         
         await setDoc(doc(db, 'staff', email), masterStaff, { merge: true });
-        setAdminAuthenticated(true, masterStaff);
-        toast.success(`মাস্টার প্রিমিয়াম এডমিন হিসেবে গুগল লগইন সফল হয়েছে!`);
-        navigate('/admin/dashboard');
+
+        // Write login attempt notification to Firestore
+        try {
+          await setDoc(doc(db, 'login_notifications', `${Date.now()}`), {
+            email: email,
+            name: masterStaff.name,
+            timestamp: new Date().toISOString(),
+            status: 'Pending OTP Verification',
+            type: 'Google Login (Master Admin)'
+          });
+        } catch (err) {
+          console.error(err);
+        }
+
+        setPendingStaff(masterStaff);
+        setPendingIsMaster(true);
+        setStep('otp');
       } else if (matchedStaff) {
         if (matchedStaff.status !== 'Active') {
-          toast.error('আপনার অ্যাডমিন প্যানেল অ্যাকাউন্টটি বর্তমানে নিষ্ক্রিয় রয়েছে!');
+          toast.error('•');
           return;
         }
         
-        setAdminAuthenticated(true, matchedStaff);
-        toast.success(`${matchedStaff.name} হিসেবে লগইন সফল হয়েছে!`);
-        navigate('/admin/dashboard');
+        // Write login attempt notification to Firestore
+        try {
+          await setDoc(doc(db, 'login_notifications', `${Date.now()}`), {
+            email: email,
+            name: matchedStaff.name,
+            timestamp: new Date().toISOString(),
+            status: 'Pending OTP Verification',
+            type: 'Google Login'
+          });
+        } catch (err) {
+          console.error(err);
+        }
+
+        setPendingStaff(matchedStaff);
+        setPendingIsMaster(false);
+        setStep('otp');
       } else {
-        toast.error('অ্যাক্সেস প্রত্যাখ্যাত! এই গুগল ইমেইলটি অ্যাডমিন বা স্টাফ প্যানেলে নিবন্ধিত নয়।');
+        toast.error('•');
       }
     } catch (err: any) {
       console.error(err);
-      toast.error('গুগল লগইন করতে সমস্যা হয়েছে: ' + (err.message || 'Unknown error'));
+      toast.error('•');
+    }
+  };
+
+  const handleOtpSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (otpCode !== '25698145') {
+      toast.error('•');
+      return;
+    }
+
+    if (!pendingStaff) {
+      toast.error('•');
+      return;
+    }
+
+    try {
+      // Write verified notification to Firestore
+      await setDoc(doc(db, 'login_notifications', `${Date.now()}`), {
+        email: pendingStaff.email,
+        name: pendingStaff.name,
+        timestamp: new Date().toISOString(),
+        status: 'Authorized',
+        type: 'OTP Verified Success'
+      });
+
+      setAdminAuthenticated(true, pendingStaff);
+      
+      // Save flag to localStorage so that admin link is never shown on the website again
+      localStorage.setItem('admin_logged_in_once', 'true');
+
+      toast.success('•');
+      navigate('/admin/dashboard');
+    } catch (err: any) {
+      console.error(err);
+      toast.error('•');
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 max-w-md w-full">
-        <div className="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-          <Shield className="w-8 h-8 flex-shrink-0" />
-        </div>
+    <div className="min-h-[85vh] flex items-center justify-center p-4 bg-[#0A0A0B]">
+      <div className="bg-[#121214] p-8 rounded-3xl shadow-2xl border border-white/5 max-w-sm w-full space-y-6">
         
-        <h1 className="text-2xl font-bold text-center text-slate-900 mb-2">এডমিন প্যানেল</h1>
-        <p className="text-center text-slate-500 mb-8">দয়া করে আপনার অ্যাডমিন লগইন তথ্য দিন</p>
-        
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">ইমেইল বা ইউজারনেম</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <User className="w-5 h-5" />
-              </div>
-              <input
-                required
-                type="text"
-                value={emailOrUser}
-                onChange={(e) => setEmailOrUser(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-slate-800"
-                placeholder="যেমন: nayem@premium-market.tech"
-              />
+        {step === 'credentials' ? (
+          <>
+            <div className="w-16 h-16 bg-white/5 text-slate-300 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+              <Shield className="w-8 h-8 flex-shrink-0" />
             </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">পাসওয়ার্ড</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <Lock className="w-5 h-5" />
+            
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <User className="w-5 h-5" />
+                </div>
+                <input
+                  required
+                  type="text"
+                  value={emailOrUser}
+                  onChange={(e) => setEmailOrUser(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white/5 text-white placeholder-slate-600 outline-none text-sm leading-none"
+                  placeholder="•••"
+                />
               </div>
-              <input
-                required
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-slate-800"
-                placeholder="******"
-              />
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <input
+                  required
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white/5 text-white placeholder-slate-600 outline-none text-sm leading-none"
+                  placeholder="••••••"
+                />
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-500 text-white font-medium py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-orange-600/20 cursor-pointer active:scale-95 flex items-center justify-center"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </form>
+
+            <div className="relative flex items-center py-1">
+              <div className="flex-grow border-t border-white/5"></div>
             </div>
-          </div>
-          
-          <button
-            type="submit"
-            className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl transition-colors mt-6 cursor-pointer"
-          >
-            লগইন করুন
-          </button>
-        </form>
 
-        <div className="relative my-6">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200"></span>
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-slate-400">অথবা সম্পূর্ণ নিরাপদ পদ্ধতি</span>
-          </div>
-        </div>
-
-        <button
-          onClick={handleGoogleLogin}
-          type="button"
-          className="w-full flex items-center justify-center gap-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold py-3 px-4 rounded-xl transition-all cursor-pointer shadow-sm"
-        >
-          <Chrome className="w-5 h-5 text-red-500" />
-          <span>Google দিয়ে এডমিন লগইন</span>
-        </button>
+            <button
+              onClick={handleGoogleLogin}
+              type="button"
+              className="w-full flex items-center justify-center gap-2 border border-white/10 hover:bg-white/5 text-slate-300 py-3.5 px-4 rounded-xl transition-all cursor-pointer shadow-md bg-white/5 active:scale-95"
+            >
+              <Chrome className="w-5 h-5 text-red-500" />
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 bg-white/5 text-orange-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner animate-pulse">
+              <Lock className="w-8 h-8 flex-shrink-0" />
+            </div>
+            
+            <form onSubmit={handleOtpSubmit} className="space-y-4">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                  <Shield className="w-5 h-5" />
+                </div>
+                <input
+                  required
+                  type="text"
+                  maxLength={8}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-white/10 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 bg-white/5 text-white text-center tracking-[0.5em] font-mono placeholder-slate-600 outline-none text-lg"
+                  placeholder="••••••••"
+                />
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-orange-600 hover:bg-orange-500 text-white font-medium py-3.5 px-4 rounded-xl transition-all shadow-lg shadow-orange-600/20 cursor-pointer active:scale-95 flex items-center justify-center"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
+            </form>
+          </>
+        )}
         
-        <div className="mt-8 pt-6 border-t border-slate-100 bg-slate-50 p-4 rounded-xl text-center">
-          <p className="text-xs text-slate-500 leading-relaxed text-left">
-            <strong>নিরাপদ Role-Based লগইন নির্দেশিকা:</strong><br />
-            ১. আপনার গুগল অ্যাকাউন্ট <span className="text-slate-900 font-semibold font-mono">pixelmarketbd2026@gmail.com</span> দিয়ে লগইন করলে আপনি স্বয়ংক্রিয়ভাবে সর্বময় ক্ষমতার **মাস্টার অ্যাডমিন** হিসেবে নিযুক্ত হবেন এবং ডাটাবেজ এক্সেস পাবেন।<br />
-            ২. অন্য কোনো ব্যক্তি সোর্স কোড ঘুরিয়ে বা ইন্সপেক্ট করে লগইন করার সুযোগ নেই। কারণ ফায়ারবেসের সিকিউরিটি রুলস সরাসরি ক্লাউডে রান হচ্ছে যা বাইপাস করা অসম্ভব।
-          </p>
-        </div>
       </div>
     </div>
   );

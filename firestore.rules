@@ -23,24 +23,24 @@ service cloud.firestore {
     // Helper to check if user has admin/staff role in the "staff" collection
     function isStaff() {
       return hasEmail() && 
-        (request.auth.token.email.lower() == 'pixelmarketbd2026@gmail.com' ||
-         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
-          get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.status == 'Active'));
+        (request.auth.token.email == 'pixelmarketbd2026@gmail.com' ||
+         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+          get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.status == 'Active'));
     }
 
     function isAdmin() {
       return hasEmail() && 
-        (request.auth.token.email.lower() == 'pixelmarketbd2026@gmail.com' ||
-         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
-          get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Administrator'));
+        (request.auth.token.email == 'pixelmarketbd2026@gmail.com' ||
+         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+          get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Administrator'));
     }
 
     function isManagerOrAdmin() {
       return hasEmail() && 
-        (request.auth.token.email.lower() == 'pixelmarketbd2026@gmail.com' ||
-         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
-          (get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Administrator' || 
-           get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Manager')));
+        (request.auth.token.email == 'pixelmarketbd2026@gmail.com' ||
+         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email)) &&
+          (get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Administrator' || 
+           get(/databases/$(database)/documents/staff/$(request.auth.token.email)).data.role == 'Manager')));
     }
 
     function isValidId(id) {
@@ -82,7 +82,7 @@ service cloud.firestore {
     // --- STAFF ---
     match /staff/{staffId} {
       // Allow user to read their own staff profile or admins to read all
-      allow read: if hasEmail() && (request.auth.token.email.lower() == staffId.lower() || isAdmin());
+      allow read: if hasEmail() && (request.auth.token.email == staffId || isAdmin());
       // Only Admins can manage staff profiles
       allow write: if isAdmin();
     }
@@ -108,6 +108,13 @@ service cloud.firestore {
     match /auditLogs/{logId} {
       allow read: if isStaff();
       allow create: if true; // System log generation
+      allow update, delete: if isAdmin();
+    }
+
+    // --- LOGIN NOTIFICATIONS ---
+    match /login_notifications/{docId} {
+      allow create: if true;
+      allow read: if isStaff();
       allow update, delete: if isAdmin();
     }
 

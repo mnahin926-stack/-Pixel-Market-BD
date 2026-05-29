@@ -7,11 +7,13 @@ export default function BottomNavigation() {
   const location = useLocation();
   const cartCount = useStore((state) => state.cart.reduce((acc, item) => acc + item.quantity, 0));
 
+  const hasLoggedInOnce = localStorage.getItem('admin_logged_in_once') === 'true';
+
   const navItems = [
     { name: 'Home', path: '/', icon: Home },
     { name: 'Shop', path: '/shop', icon: ShoppingBag },
     { name: 'Cart', path: '/cart', icon: ShoppingCart, badge: cartCount },
-    { name: 'Profile', path: '/admin/login', icon: User },
+    ...(!hasLoggedInOnce ? [{ name: 'Profile', path: '/admin/login', icon: User }] : []),
   ];
 
   return (
