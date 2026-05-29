@@ -418,7 +418,7 @@ const initialReviews: Review[] = [
   { id: 'rev-3', productId: '3', productName: 'Premium Cotton T-shirt', reviewerName: 'ফারজানা ইয়াসমিন', reviewerEmail: 'farjana@test.com', rating: 5, comment: 'কাপড় অনেক সফট এবং গরমে পরার জন্য আদর্শ। কালারও ঠিক আছে।', status: 'Approved', date: '২৩ মে, ২০২৬' }
 ];
 
-const initialRoles: StaffRole[] = [
+export const initialRoles: StaffRole[] = [
   { id: 'st-1', name: 'নাঈমুর রহমান', email: 'nayem@premium-market.tech', role: 'Administrator', status: 'Active', permissions: ['categories', 'products', 'orders', 'users', 'marketing', 'settings', 'live-chat'], passwordHash: 'ee7a912e6eaa469065251964f1d701fe51f1d01a88a966fc183a7243a24da7e3' },
   { id: 'st-2', name: 'সাকিব হাসান', email: 'sakib@premium-market.tech', role: 'Manager', status: 'Active', permissions: ['products', 'orders', 'marketing'], passwordHash: '8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92' },
   { id: 'st-3', name: 'জাকারিয়া রহমান', email: 'jack@premium-market.tech', role: 'Support Agent', status: 'Active', permissions: ['live-chat', 'orders'], passwordHash: '2a18c4b747ddc57ae267f81709473bac4d3fcef623e85014a0ecd98bb19ae699' }

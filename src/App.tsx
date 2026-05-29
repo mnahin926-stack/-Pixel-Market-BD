@@ -56,11 +56,11 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Update Website Title
-    if (siteSettings.storeName) {
+    if (siteSettings?.storeName) {
       document.title = siteSettings.storeName;
     }
     // Update Favicon
-    if (siteSettings.faviconUrl) {
+    if (siteSettings?.faviconUrl) {
       let link: HTMLLinkElement | null = document.querySelector("link[rel~='icon']");
       if (!link) {
         link = document.createElement('link');
@@ -70,10 +70,10 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       link.href = siteSettings.faviconUrl;
     }
     // Attempt to inject primary color globally via CSS var if possible
-    if (siteSettings.colors.primary) {
+    if (siteSettings?.colors?.primary) {
       document.documentElement.style.setProperty('--color-primary', siteSettings.colors.primary);
     }
-  }, [siteSettings.storeName, siteSettings.faviconUrl, siteSettings.colors.primary]);
+  }, [siteSettings?.storeName, siteSettings?.faviconUrl, siteSettings?.colors?.primary]);
 
   return (
     <div className={cn(

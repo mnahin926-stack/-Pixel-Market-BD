@@ -278,7 +278,7 @@ export default function Checkout() {
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500"
-                placeholder={`${siteSettings.checkoutForm.nameLabel} *`}
+                placeholder={`${siteSettings?.checkoutForm?.nameLabel || 'আপনার নাম'} *`}
               />
             </div>
             
@@ -291,7 +291,7 @@ export default function Checkout() {
                    value={formData.phone}
                    onChange={handleInputChange}
                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500"
-                   placeholder={`${siteSettings.checkoutForm.phoneLabel} *`}
+                   placeholder={`${siteSettings?.checkoutForm?.phoneLabel || 'মোবাইল নম্বর'} *`}
                  />
                </div>
                <div>
@@ -301,7 +301,7 @@ export default function Checkout() {
                    value={formData.altPhone}
                    onChange={handleInputChange}
                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500"
-                   placeholder={siteSettings.checkoutForm.altPhoneLabel}
+                   placeholder={siteSettings?.checkoutForm?.altPhoneLabel || 'বিকল্প মোবাইল নম্বর'}
                  />
                </div>
             </div>
@@ -313,7 +313,7 @@ export default function Checkout() {
                  value={formData.email}
                  onChange={handleInputChange}
                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500"
-                 placeholder={siteSettings.checkoutForm.emailLabel}
+                 placeholder={siteSettings?.checkoutForm?.emailLabel || 'ইমেইল অ্যাড্রেস'}
                />
             </div>
             
@@ -330,7 +330,7 @@ export default function Checkout() {
                        <option key={opt.id} value={opt.id}>{opt.name} (৳{opt.charge})</option>
                      ))
                   ) : (
-                    <option value="">ডেলিভারি অপশন নেই</option>
+                     <option value="">ডেলিভারি অপশন নেই</option>
                   )}
                 </select>
               </div>
@@ -341,7 +341,7 @@ export default function Checkout() {
                    value={formData.city}
                    onChange={handleInputChange}
                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500"
-                   placeholder={siteSettings.checkoutForm.cityLabel}
+                   placeholder={siteSettings?.checkoutForm?.cityLabel || 'শহর / জেলা'}
                  />
               </div>
             </div>
@@ -354,7 +354,7 @@ export default function Checkout() {
                 onChange={handleInputChange}
                 rows={3}
                 className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-orange-500 resize-none placeholder-slate-500"
-                placeholder={`${siteSettings.checkoutForm.addressLabel} *`}
+                placeholder={`${siteSettings?.checkoutForm?.addressLabel || 'ডেলিভারি ঠিকানা'} *`}
               />
             </div>
 

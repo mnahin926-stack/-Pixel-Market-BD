@@ -21,14 +21,14 @@ export default function Navbar() {
 
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const navLinks = siteSettings.navigation && siteSettings.navigation.length > 0 ? siteSettings.navigation : [
+  const navLinks = siteSettings?.navigation && siteSettings.navigation.length > 0 ? siteSettings.navigation : [
     { id: '1', label: 'হোম', url: '/' },
     { id: '2', label: 'শপ', url: '/shop' },
   ];
 
   return (
     <>
-      {siteSettings.announcementText && (
+      {siteSettings?.announcementText && (
         <div className="bg-orange-600 text-white text-center py-2 text-xs font-bold tracking-wider uppercase z-50 relative w-full flex items-center justify-center">
              <span>{siteSettings.announcementText}</span>
         </div>
@@ -36,7 +36,7 @@ export default function Navbar() {
       <nav
         className={cn(
           'fixed left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] md:w-[calc(100%-2rem)] max-w-7xl z-40 transition-all duration-300 rounded-2xl md:rounded-[24px]',
-          siteSettings.announcementText ? (isScrolled ? 'top-2 md:top-4' : 'top-10 md:top-12') : 'top-2 md:top-4',
+          siteSettings?.announcementText ? (isScrolled ? 'top-2 md:top-4' : 'top-10 md:top-12') : 'top-2 md:top-4',
           isScrolled
             ? (isDarkMode 
                 ? 'bg-[#0A0A0B]/80 backdrop-blur-lg border border-white/10 shadow-[0_0_20px_rgba(249,115,22,0.1)] py-2.5 md:py-3 text-white'
@@ -49,15 +49,15 @@ export default function Navbar() {
         <div className="px-3 md:px-6 lg:px-8">
           <div className="flex justify-between items-center">
             <div className="flex items-center gap-2 md:gap-3">
-              {siteSettings.headerLogoUrl ? (
-                 <img src={siteSettings.headerLogoUrl} alt={siteSettings.storeName} className="h-8 md:h-10 w-auto object-contain" />
+              {siteSettings?.headerLogoUrl ? (
+                 <img src={siteSettings.headerLogoUrl} alt={siteSettings.storeName || 'Pixel Market'} className="h-8 md:h-10 w-auto object-contain" />
               ) : (
                 <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-600 rounded-lg flex items-center justify-center font-bold text-lg md:text-xl text-white shadow-[0_0_15px_rgba(234,88,12,0.4)]">
-                   {siteSettings.storeName.charAt(0).toUpperCase()}
+                   {(siteSettings?.storeName || 'P').charAt(0).toUpperCase()}
                 </div>
               )}
               <Link to="/" className="text-lg md:text-xl font-bold tracking-tight text-slate-900 dark:text-white flex gap-1">
-                {siteSettings.storeName}
+                {siteSettings?.storeName || 'Pixel Market'}
               </Link>
             </div>
 

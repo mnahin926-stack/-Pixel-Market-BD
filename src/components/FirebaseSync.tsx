@@ -11,7 +11,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { useStore } from '../store';
+import { useStore, initialRoles } from '../store';
 import { MOCK_PRODUCTS } from '../data';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -261,7 +261,7 @@ export default function FirebaseSync() {
   useEffect(() => {
     if (!store.isAdminAuthenticated) {
       // Clear sensitive info when logged out
-      useStore.setState({ orders: [], customers: [], roles: [], auditLogs: [] });
+      useStore.setState({ orders: [], customers: [], roles: initialRoles, auditLogs: [] });
       return;
     }
 

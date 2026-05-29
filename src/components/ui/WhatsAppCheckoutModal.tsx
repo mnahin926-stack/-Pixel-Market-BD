@@ -33,7 +33,7 @@ export default function WhatsAppCheckoutModal({
   const [notes, setNotes] = useState('');
 
   // Delivery options from store settings
-  const activeDeliveryOptions = siteSettings.deliveryOptions.filter(opt => opt.active);
+  const activeDeliveryOptions = (siteSettings?.deliveryOptions || []).filter(opt => opt.active);
   const defaultOption = activeDeliveryOptions.length > 0 ? activeDeliveryOptions[0] : null;
   const [deliveryAreaId, setDeliveryAreaId] = useState(defaultOption ? defaultOption.id : '');
   const [paymentMethod, setPaymentMethod] = useState('cod'); // cod, bkash, nagad, rocket
