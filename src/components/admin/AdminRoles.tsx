@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { ShieldCheck, Plus, Check, X, Edit2, ShieldAlert } from 'lucide-react';
 import { useStore, StaffRole } from '../../store';
 import { toast } from 'react-toastify';
+import { sha256Sync } from '../../utils';
 
 export default function AdminRoles() {
   const { roles, addStaff, updateStaff, deleteStaff } = useStore();
@@ -14,6 +15,7 @@ export default function AdminRoles() {
   const [sRole, setSRole] = useState<'Administrator' | 'Manager' | 'Support Agent' | 'Editor'>('Manager');
   const [sStatus, setSStatus] = useState<'Active' | 'Inactive'>('Active');
   const [rPermissions, setRPermissions] = useState<string[]>([]);
+  const [sPassword, setSPassword] = useState('');
 
   const togglePermission = (perm: string) => {
     if (rPermissions.includes(perm)) {
@@ -49,8 +51,9 @@ export default function AdminRoles() {
       return toast.error('দয়া করে স্টাফ নাম এবং সঠিক ইমেইল দিন!');
     }
 
+    const docId = sEmail.trim().toLowerCase();
     const payload: StaffRole = {
-      id: editingId || `st-${Date.now()}`,
+      id: docId,
       name: sName.trim(),
       email: sEmail.trim(),
       role: sRole,
@@ -60,6 +63,10 @@ export default function AdminRoles() {
 
     if (editingId) {
       updateStaff(payload);
+      // If email changed, delete the old document
+      if (editingId !== docId) {
+        deleteStaff(editingId);
+      }
       toast.success('স্টাফ চমৎকারভাবে আপডেট হয়েছে!');
     } else {
       addStaff(payload);

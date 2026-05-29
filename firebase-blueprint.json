@@ -1,0 +1,189 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "An e-commerce product in Pixel Market BD",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "originalPrice": { "type": "number" },
+        "image": { "type": "string" },
+        "images": { "type": "array" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "subcategory": { "type": "string" },
+        "stock": { "type": "number" },
+        "sizes": { "type": "array" },
+        "colors": { "type": "array" },
+        "brand": { "type": "string" },
+        "discount": { "type": "number" },
+        "sku": { "type": "string" },
+        "seoTags": { "type": "array" },
+        "rating": { "type": "number" },
+        "reviewsCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Draft"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "price", "image", "category", "stock"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Product category",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "image": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Hidden"] },
+        "subcategories": { "type": "array" }
+      },
+      "required": ["id", "name", "status"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "An order submitted by a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "email": { "type": "string" },
+        "altPhone": { "type": "string" },
+        "city": { "type": "string" },
+        "deliveryAreaId": { "type": "string" },
+        "deliveryAreaName": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "paymentStatus": { "type": "string", "enum": ["Paid", "Unpaid"] },
+        "trxId": { "type": "string" },
+        "cart": { "type": "array" },
+        "items": { "type": "array" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "deliveryCharge": { "type": "number" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"] },
+        "date": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "name", "phone", "address", "city", "items", "subtotal", "deliveryCharge", "total", "status"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "General settings of the shop",
+      "type": "object",
+      "properties": {
+        "storeName": { "type": "string" },
+        "announcementText": { "type": "string" },
+        "description": { "type": "string" },
+        "aboutUsText": { "type": "string" },
+        "faviconUrl": { "type": "string" },
+        "headerLogoUrl": { "type": "string" },
+        "footerLogoUrl": { "type": "string" },
+        "contactEmail": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "whatsappNumber": { "type": "string" },
+        "headOfficeAddress": { "type": "string" },
+        "socialLinks": { "type": "object" },
+        "deliveryOptions": { "type": "array" },
+        "whatsappOrderAlertNumber": { "type": "string" },
+        "megaOfferText": { "type": "string" }
+      },
+      "required": ["storeName", "contactEmail", "contactPhone"]
+    },
+    "Banner": {
+      "title": "Banner",
+      "description": "Slider/Hero banners",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "subtitle": { "type": "string" },
+        "image": { "type": "string" },
+        "position": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      },
+      "required": ["id", "title", "image", "status"]
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Coupon promotional offer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "discountValue": { "type": "number" },
+        "minSpend": { "type": "number" },
+        "expiryDate": { "type": "string" },
+        "totalUsage": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Inactive"] }
+      },
+      "required": ["id", "code", "discountType", "discountValue", "status"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Registered customer records",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "ordersCount": { "type": "number" },
+        "spent": { "type": "number" },
+        "status": { "type": "string", "enum": ["Active", "Blocked"] },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "phone", "status"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Action log of administrative operations",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "action": { "type": "string" },
+        "user": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "action", "user", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "E-commerce products database"
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "Product categories list"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders collection"
+    },
+    "/settings/global": {
+      "schema": "SiteSettings",
+      "description": "Global website settings and config"
+    },
+    "/banners/{bannerId}": {
+      "schema": "Banner",
+      "description": "Homepage slider banners"
+    },
+    "/coupons/{couponId}": {
+      "schema": "Coupon",
+      "description": "Discount coupon codes"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Registered store customers"
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Admin actions audit logs"
+    }
+  }
+}

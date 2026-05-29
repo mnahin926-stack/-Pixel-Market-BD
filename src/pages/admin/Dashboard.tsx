@@ -41,6 +41,7 @@ import AdminSecurity from '../../components/admin/AdminSecurity';
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const setAdminAuthenticated = useStore((state) => state.setAdminAuthenticated);
+  const currentStaff = useStore((state) => state.currentStaff);
   const { orders, customers, products, supportChats, reviews } = useStore();
   const navigate = useNavigate();
 
@@ -94,12 +95,59 @@ export default function AdminDashboard() {
     { id: 'security', label: 'সিকিউরিটি ও ব্যাকআপ', icon: <ShieldAlert className="w-5 h-5" />, group: 'sওভারল' },
   ];
 
+  const hasPermissionForTab = (tabId: string) => {
+    if (!currentStaff) return false;
+    
+    const email = currentStaff.email.toLowerCase();
+    const isMaster = email === 'pixelmarketbd2026@gmail.com';
+    if (isMaster) return true;
+    if (currentStaff.role === 'Administrator') return true;
+
+    const perms = currentStaff.permissions || [];
+    
+    switch (tabId) {
+      case 'dashboard':
+        return true;
+      case 'products':
+        return perms.includes('products') || perms.includes('all');
+      case 'categories':
+        return perms.includes('categories') || perms.includes('all');
+      case 'orders':
+        return perms.includes('orders') || perms.includes('all');
+      case 'payments':
+        return perms.includes('orders') || perms.includes('all');
+      case 'delivery':
+        return perms.includes('orders') || perms.includes('all');
+      case 'users':
+        return perms.includes('customers') || perms.includes('all');
+      case 'roles':
+        return false; // Only Administrators or Master can manage roles
+      case 'marketing':
+        return perms.includes('marketing') || perms.includes('all');
+      case 'reviews':
+        return perms.includes('marketing') || perms.includes('live-chat') || perms.includes('all');
+      case 'support':
+        return perms.includes('live-chat') || perms.includes('all');
+      case 'reports':
+        return perms.includes('products') || perms.includes('orders') || perms.includes('all');
+      case 'settings':
+        return perms.includes('settings') || perms.includes('all');
+      case 'security':
+        return perms.includes('settings') || perms.includes('all');
+      default:
+        return false;
+    }
+  };
+
+  const allowedTabs = tabs.filter(tab => hasPermissionForTab(tab.id));
+  const currentActiveTab = hasPermissionForTab(activeTab) ? activeTab : 'dashboard';
+
   const getStatusColor = (status: string) => {
     switch(status) {
       case 'Pending': return 'bg-yellow-100 text-yellow-750';
-      case 'Processing': return 'bg-blue-100 text-blue-750';
+      case 'Processing': return 'bg-blue-105 text-blue-750';
       case 'Shipped': return 'bg-indigo-100 text-indigo-755 border border-indigo-200';
-      case 'Delivered': return 'bg-green-100 text-green-755';
+      case 'Delivered': return 'bg-green-105 text-green-755';
       case 'Cancelled': return 'bg-red-105 text-red-755';
       default: return 'bg-slate-100 text-slate-700';
     }
@@ -121,7 +169,7 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'সর্বমোট বিক্রয় (Revenue)', value: `৳${totalIncome.toLocaleString('bn-BD')}`, icon: <DollarSign className="w-6 h-6 text-green-600" />, bg: 'bg-green-100/60' },
-          { label: 'অপেক্ষমাণ অর্ডার', value: `${pendingOrdersCount} টি`, icon: <ShoppingCart className="w-6 h-6 text-blue-600" />, bg: 'bg-blue-100/60' },
+          { label: 'অпередиমাণ অর্ডার', value: `${pendingOrdersCount} টি`, icon: <ShoppingCart className="w-6 h-6 text-blue-600" />, bg: 'bg-blue-100/60' },
           { label: 'নিবন্ধিত কাস্টমার', value: `${customersCount} জন`, icon: <Users className="w-6 h-6 text-purple-600" />, bg: 'bg-purple-100/60' },
           { label: 'ক্যাটালগ প্রোডাক্টস', value: `${productsCount} টি`, icon: <Package className="w-6 h-6 text-orange-600" />, bg: 'bg-orange-100/60' }
         ].map((stat, i) => (
@@ -143,7 +191,7 @@ export default function AdminDashboard() {
           <h3 className="text-xl font-bold text-slate-900">সাম্প্রতিক অর্ডারসমূহ</h3>
           <button 
             onClick={() => setActiveTab('orders')}
-            className="text-xs font-bold text-indigo-650 flex items-center gap-1.5 hover:text-indigo-850 cursor-pointer"
+            className="text-xs font-bold text-indigo-655 flex items-center gap-1.5 hover:text-indigo-850 cursor-pointer"
           >
             সব অর্ডার দেখুন <ArrowRight className="w-4 h-4" />
           </button>
@@ -162,7 +210,7 @@ export default function AdminDashboard() {
             </thead>
             <tbody>
               {orders.slice(0, 5).map((order, i) => (
-                <tr key={i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                <tr key={i} className="border-b border-slate-50 hover:bg-slate-50/55 transition-colors">
                   <td className="px-5 py-3.5 font-bold text-indigo-600">{order.id}</td>
                   <td className="px-5 py-3.5 font-semibold text-slate-900">{order.name}</td>
                   <td className="px-5 py-3.5 text-slate-500 font-medium">{order.date || 'আজ'}</td>
@@ -197,22 +245,39 @@ export default function AdminDashboard() {
     <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 absolute inset-0 z-[100] font-sans">
       
       {/* Sidebar navigation */}
-      <aside className="w-full md:w-64 bg-slate-950 text-slate-350 flex-shrink-0 border-r border-slate-900">
+      <aside className="w-full md:w-64 bg-slate-955 text-slate-350 flex-shrink-0 border-r border-slate-900">
         <div className="p-6 border-b border-slate-900/80 bg-slate-955">
           <h1 className="text-xl font-extrabold text-white tracking-widest uppercase">Pixel<span className="text-indigo-400 font-light">Market</span></h1>
           <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">অ্যাডমিন প্যানেল গেটওয়ে</p>
         </div>
+
+        {currentStaff && (
+          <div className="mx-4 mt-4 p-3 bg-slate-900/40 rounded-xl border border-slate-800/60 text-left">
+            <p className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">সক্রিয় অপারেটর</p>
+            <p className="text-xs font-black text-white mt-1 flex items-center gap-1">
+              <UserCheck className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0" id="op-check-icon" />
+              <span className="truncate">{currentStaff.name}</span>
+            </p>
+            <p className="text-[10px] text-slate-400 font-mono truncate">{currentStaff.email}</p>
+            <div className="mt-2 flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-700/50">
+                {currentStaff.role}
+              </span>
+            </div>
+          </div>
+        )}
         
-        <nav className="p-4 space-y-5 max-h-[85vh] overflow-y-auto">
-          {Array.from(new Set(tabs.map(t => t.group))).map(groupName => (
+        <nav className="p-4 space-y-5 max-h-[70vh] overflow-y-auto">
+          {Array.from(new Set(allowedTabs.map(t => t.group))).map(groupName => (
             <div key={groupName} className="space-y-1">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 px-4">{groupName}</h3>
-              {tabs.filter(t => t.group === groupName).map(tab => (
+              {allowedTabs.filter(t => t.group === groupName).map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-xs font-bold text-left cursor-pointer ${
-                    activeTab === tab.id 
+                    currentActiveTab === tab.id 
                       ? 'bg-indigo-650 text-white shadow-lg shadow-indigo-600/15' 
                       : 'text-slate-400 hover:bg-slate-900 hover:text-white'
                   }`}
@@ -236,10 +301,10 @@ export default function AdminDashboard() {
       {/* Main content body switcher */}
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         <div className="max-w-6xl mx-auto space-y-4">
-          {activeTab !== 'dashboard' && (
+          {currentActiveTab !== 'dashboard' && (
             <div className="flex justify-between items-center bg-white px-5 py-3 rounded-xl border border-slate-100 shadow-sm transition-all animate-in fade-in slide-in-from-top-1">
               <span className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                📍 বর্তমান ফিচার: <span className="text-indigo-600 font-bold">{tabs.find(t => t.id === activeTab)?.label}</span>
+                📍 বর্তমান ফিচার: <span className="text-indigo-600 font-bold">{tabs.find(t => t.id === currentActiveTab)?.label}</span>
               </span>
               <button 
                 onClick={() => setActiveTab('dashboard')}
@@ -251,20 +316,20 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'products' && <AdminProducts />}
-          {activeTab === 'categories' && <AdminCategories />}
-          {activeTab === 'orders' && <AdminOrders />}
-          {activeTab === 'payments' && <AdminPayments />}
-          {activeTab === 'delivery' && <AdminDelivery />}
-          {activeTab === 'users' && <AdminCustomers />}
-          {activeTab === 'roles' && <AdminRoles />}
-          {activeTab === 'marketing' && <AdminMarketing />}
-          {activeTab === 'reviews' && <AdminReviews />}
-          {activeTab === 'support' && <AdminSupport />}
-          {activeTab === 'reports' && <AdminReports />}
-          {activeTab === 'settings' && <AdminSettings />}
-          {activeTab === 'security' && <AdminSecurity />}
+          {currentActiveTab === 'dashboard' && renderDashboard()}
+          {currentActiveTab === 'products' && <AdminProducts />}
+          {currentActiveTab === 'categories' && <AdminCategories />}
+          {currentActiveTab === 'orders' && <AdminOrders />}
+          {currentActiveTab === 'payments' && <AdminPayments />}
+          {currentActiveTab === 'delivery' && <AdminDelivery />}
+          {currentActiveTab === 'users' && <AdminCustomers />}
+          {currentActiveTab === 'roles' && <AdminRoles />}
+          {currentActiveTab === 'marketing' && <AdminMarketing />}
+          {currentActiveTab === 'reviews' && <AdminReviews />}
+          {currentActiveTab === 'support' && <AdminSupport />}
+          {currentActiveTab === 'reports' && <AdminReports />}
+          {currentActiveTab === 'settings' && <AdminSettings />}
+          {currentActiveTab === 'security' && <AdminSecurity />}
         </div>
       </main>
     </div>

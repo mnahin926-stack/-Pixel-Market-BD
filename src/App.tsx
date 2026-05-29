@@ -9,6 +9,7 @@ import BottomNavigation from './components/layout/BottomNavigation';
 import FloatingWhatsApp from './components/layout/FloatingWhatsApp';
 import { useStore } from './store';
 import { cn } from './utils';
+import FirebaseSync from './components/FirebaseSync';
 
 // Performance Optimization: Lazy Load pages to reduce initial bundle chunk size by >50%!
 const Home = React.lazy(() => import('./pages/Home'));
@@ -95,6 +96,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <FirebaseSync />
       <ToastContainer position="bottom-right" aria-label="Notifications" />
       <Routes>
         {/* Public Routes */}

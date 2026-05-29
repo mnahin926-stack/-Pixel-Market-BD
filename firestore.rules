@@ -1,0 +1,133 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net: Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function hasEmail() {
+      return isSignedIn() && request.auth.token.email != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && (request.auth.token.email_verified == true || request.auth.token.firebase.sign_in_provider == 'google.com');
+    }
+
+    // Helper to check if user has admin/staff role in the "staff" collection
+    function isStaff() {
+      return hasEmail() && 
+        (request.auth.token.email.lower() == 'pixelmarketbd2026@gmail.com' ||
+         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
+          get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.status == 'Active'));
+    }
+
+    function isAdmin() {
+      return hasEmail() && 
+        (request.auth.token.email.lower() == 'pixelmarketbd2026@gmail.com' ||
+         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
+          get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Administrator'));
+    }
+
+    function isManagerOrAdmin() {
+      return hasEmail() && 
+        (request.auth.token.email.lower() == 'pixelmarketbd2026@gmail.com' ||
+         (exists(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())) &&
+          (get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Administrator' || 
+           get(/databases/$(database)/documents/staff/$(request.auth.token.email.lower())).data.role == 'Manager')));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- PRODUCTS ---
+    match /products/{productId} {
+      // Anyone can read products
+      allow read: if true;
+      // Only staff/admin can write
+      allow write: if isManagerOrAdmin();
+    }
+
+    // --- CATEGORIES ---
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isManagerOrAdmin();
+    }
+
+    // --- BANNERS / SLIDERS ---
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isManagerOrAdmin();
+    }
+
+    // --- COUPONS ---
+    match /coupons/{couponId} {
+      allow read: if true; // Customers can check coupons
+      allow write: if isManagerOrAdmin();
+    }
+
+    // --- SETTINGS ---
+    match /settings/{settingsId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- STAFF ---
+    match /staff/{staffId} {
+      // Allow user to read their own staff profile or admins to read all
+      allow read: if hasEmail() && (request.auth.token.email.lower() == staffId.lower() || isAdmin());
+      // Only Admins can manage staff profiles
+      allow write: if isAdmin();
+    }
+
+    // --- CUSTOMERS ---
+    match /customers/{customerId} {
+      // Only staff/admin can read or manage customers collection, 
+      // or the customer user can read/write their own profile if authenticated
+      allow read, write: if isStaff() || (isSignedIn() && request.auth.uid == customerId);
+    }
+
+    // --- ORDERS ---
+    match /orders/{orderId} {
+      // Customers can create orders (public creation is allowed for anonymous checkouts)
+      allow create: if true;
+      // Customers can read their own orders if matched by phone or uid, but Staff can read/write all
+      allow read: if isStaff() || (isSignedIn() && (resource.data.customerId == request.auth.uid || resource.data.email == request.auth.token.email));
+      // Only Staff/Admin can update or delete orders
+      allow update, delete: if isStaff();
+    }
+
+    // --- AUDIT LOGS ---
+    match /auditLogs/{logId} {
+      allow read: if isStaff();
+      allow create: if true; // System log generation
+      allow update, delete: if isAdmin();
+    }
+
+    // --- FAQS ---
+    match /faqs/{faqId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+
+    // --- REVIEWS ---
+    match /reviews/{reviewId} {
+      allow read: if true;
+      // Anyone can create a review, but only staff can approve/delete
+      allow create: if true;
+      allow update, delete: if isStaff();
+    }
+
+    // --- SUPPORT CHATS & MESSAGES ---
+    match /supportChats/{chatId} {
+      allow read, write: if isStaff() || (isSignedIn() && (resource.data.customerId == request.auth.uid || chatId == request.auth.uid));
+    }
+  }
+}
