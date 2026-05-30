@@ -4,7 +4,7 @@ import { Shield, Sparkles, Target, Award, Compass, HeartHandshake } from 'lucide
 export default function About() {
   const { siteSettings, isDarkMode } = useStore();
   
-  const aboutText = siteSettings.aboutUsText || `আমাদের সম্পর্কে About Us – Pixel Market BD
+  const aboutText = siteSettings?.aboutUsText || `আমাদের সম্পর্কে About Us – Pixel Market BD
 স্বাগতম Pixel Market BD এ।
 আমরা শুধু একটি অনলাইন শপ নই — আমরা এমন একটি বিশ্বস্ত প্ল্যাটফর্ম, যেখানে আধুনিক প্রযুক্তি, প্রিমিয়াম কোয়ালিটি এবং গ্রাহকের সন্তুষ্টিকে সর্বোচ্চ গুরুত্ব দেওয়া হয়। বর্তমান ডিজিটাল যুগে মানুষ চায় আসল পণ্য, সঠিক দাম এবং নির্ভরযোগ্য সার্ভিস। আর ঠিক সেই লক্ষ্য নিয়েই যাত্রা শুরু করেছে Pixel Market BD।
 আমাদের লক্ষ্য একটাই — বাংলাদেশের প্রতিটি মানুষের কাছে বিশ্বস্ত ও মানসম্মত পণ্য সহজে পৌঁছে দেওয়া।`;

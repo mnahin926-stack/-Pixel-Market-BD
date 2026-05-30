@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -43,7 +43,7 @@ const PrivateAdminRoute = ({ children }: { children: React.ReactNode }) => {
   return isAdminAuthenticated ? children : <Navigate to="/admin/login" />;
 };
 
-function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayout() {
   const { siteSettings, isDarkMode } = useStore();
 
   useEffect(() => {
@@ -83,7 +83,7 @@ function AppLayout({ children }: { children: React.ReactNode }) {
       <Navbar />
       <main className="flex-grow pt-24 pb-8 max-w-[1400px] w-full mx-auto px-4 sm:px-6 lg:px-8">
         <Suspense fallback={<PageLoader />}>
-          {children}
+          <Outlet />
         </Suspense>
       </main>
       <Footer />
@@ -99,27 +99,31 @@ export default function App() {
       <FirebaseSync />
       <ToastContainer position="bottom-right" aria-label="Notifications" />
       <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<AppLayout><Home /></AppLayout>} />
-        <Route path="/shop" element={<AppLayout><Shop /></AppLayout>} />
-        <Route path="/about" element={<AppLayout><About /></AppLayout>} />
-        <Route path="/product/:id" element={<AppLayout><ProductDetails /></AppLayout>} />
-        <Route path="/cart" element={<AppLayout><Cart /></AppLayout>} />
-        <Route path="/checkout" element={<AppLayout><Checkout /></AppLayout>} />
+        <Route element={<AppLayout />}>
+          {/* Public Routes inside Persistent Shell Layout */}
+          <Route path="/" element={<Home />} />
+          <Route path="/shop" element={<Shop />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
 
-        {/* Customer Routes */}
-        <Route path="/login" element={<AppLayout><CustomerLogin /></AppLayout>} />
-        <Route 
-          path="/account" 
-          element={
-            <PrivateUserRoute>
-              <AppLayout><Account /></AppLayout>
-            </PrivateUserRoute>
-          } 
-        />
+          {/* Customer Routes inside Persistent Shell Layout */}
+          <Route path="/login" element={<CustomerLogin />} />
+          <Route 
+            path="/account" 
+            element={
+              <PrivateUserRoute>
+                <Account />
+              </PrivateUserRoute>
+            } 
+          />
 
-        {/* Admin Routes */}
-        <Route path="/admin/login" element={<AppLayout><AdminLogin /></AppLayout>} />
+          {/* Admin Routes inside Persistent Shell Layout */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+        </Route>
+
+        {/* Dedicated Admin Dashboard Route */}
         <Route 
           path="/admin/*" 
           element={
@@ -130,7 +134,7 @@ export default function App() {
             </PrivateAdminRoute>
           } 
         />
-      </Routes>
-    </BrowserRouter>
-  );
+        </Routes>
+      </BrowserRouter>
+    );
 }

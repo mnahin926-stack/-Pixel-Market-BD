@@ -11,7 +11,9 @@ export default function Checkout() {
   const location = useLocation();
   const discount = location.state?.discount || 0;
   
-  const activeDeliveryOptions = siteSettings.deliveryOptions.filter(opt => opt.active);
+  const activeDeliveryOptions = siteSettings?.deliveryOptions
+    ? siteSettings.deliveryOptions.filter(opt => opt.active)
+    : [];
   const defaultDeliveryOption = activeDeliveryOptions.length > 0 ? activeDeliveryOptions[0] : null;
 
   const [formData, setFormData] = useState({
@@ -60,9 +62,9 @@ export default function Checkout() {
     e.preventDefault();
     
     // Smart Validations
-    if (!formData.name.trim()) return toast.error(`দয়া করে ${siteSettings.checkoutForm.nameLabel} লিখুন`);
+    if (!formData.name.trim()) return toast.error(`দয়া করে ${siteSettings?.checkoutForm?.nameLabel || 'আপনার নাম'} লিখুন`);
     if (!validatePhone(formData.phone)) return toast.error('সঠিক মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)');
-    if (!formData.address.trim()) return toast.error(`দয়া করে ${siteSettings.checkoutForm.addressLabel} লিখুন`);
+    if (!formData.address.trim()) return toast.error(`দয়া করে ${siteSettings?.checkoutForm?.addressLabel || 'ডেলিভারি ঠিকানা'} লিখুন`);
     if (!formData.deliveryAreaId) return toast.error('ডেলিভারি এরিয়া সিলেক্ট করুন');
     
     if (formData.paymentMethod !== 'cod' && !formData.trxId.trim()) {
@@ -109,7 +111,7 @@ export default function Checkout() {
       console.log('Submitting order:', orderData);
       
       // WhatsApp notification directly via link or bot
-      const adminWhatsApp = siteSettings.whatsappOrderAlertNumber;
+      const adminWhatsApp = siteSettings?.whatsappOrderAlertNumber;
       if (adminWhatsApp) {
          const message = `🛍 *নতুন অর্ডার [${generatedOrderId}]!*\n\n*নাম:* ${orderData.name}\n*ফোন:* ${orderData.phone}\n*ঠিকানা:* ${orderData.address}\n*এরিয়া:* ${orderData.deliveryAreaName}\n*পেমেন্ট:* ${orderData.paymentMethod.toUpperCase()}\n\n*প্রোডাক্টস:*\n${orderData.cart.join('\n')}\n\n*মোট দাম:* ৳${orderData.total}`;
          console.log('Would send to WhatsApp:', adminWhatsApp, message);
@@ -135,9 +137,9 @@ export default function Checkout() {
 
   const handleWhatsAppSubmit = async () => {
     // Smart Validations
-    if (!formData.name.trim()) return toast.error(`দয়া করে ${siteSettings.checkoutForm.nameLabel} লিখুন`);
+    if (!formData.name.trim()) return toast.error(`দয়া করে ${siteSettings?.checkoutForm?.nameLabel || 'আপনার নাম'} লিখুন`);
     if (!validatePhone(formData.phone)) return toast.error('সঠিক মোবাইল নম্বর দিন (যেমন: 017XXXXXXXX)');
-    if (!formData.address.trim()) return toast.error(`দয়া করে ${siteSettings.checkoutForm.addressLabel} লিখুন`);
+    if (!formData.address.trim()) return toast.error(`দয়া করে ${siteSettings?.checkoutForm?.addressLabel || 'ডেলিভারি ঠিকানা'} লিখুন`);
     if (!formData.deliveryAreaId) return toast.error('ডেলিভারি এরিয়া সিলেক্ট করুন');
     
     if (formData.paymentMethod !== 'cod' && !formData.trxId.trim()) {
@@ -185,9 +187,9 @@ export default function Checkout() {
       addOrder(orderData);
       
       // WhatsApp notification directly via link or bot
-      const adminWhatsApp = (siteSettings.whatsappOrderAlertNumber || '+8801234567890').replace(/[^\d]/g, '');
+      const adminWhatsApp = (siteSettings?.whatsappOrderAlertNumber || '+8801234567890').replace(/[^\d]/g, '');
       
-      let message = `🛒 *New Order - ${siteSettings.storeName || 'Pixel Market BD'}*\n`;
+      let message = `🛒 *New Order - ${siteSettings?.storeName || 'Pixel Market BD'}*\n`;
       message += `👤 *Name:* ${orderData.name}\n`;
       message += `📞 *Phone:* ${orderData.phone}\n`;
       message += `📦 *Product:* ${cart.map(item => `${item.name}${item.selectedSize ? ` [${item.selectedSize}]` : ''}${item.selectedColor ? ` [${item.selectedColor}]` : ''} x${item.quantity}`).join(', ')}\n`;

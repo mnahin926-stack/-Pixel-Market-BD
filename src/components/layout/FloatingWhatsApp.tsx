@@ -8,7 +8,7 @@ export default function FloatingWhatsApp() {
   const [msgText, setMsgText] = useState('');
 
   // Normalize WhatsApp number
-  const rawNum = siteSettings.whatsappNumber || '+8801234567890';
+  const rawNum = siteSettings?.whatsappNumber || '+8801234567890';
   const cleanNumber = rawNum.replace(/[^\d]/g, '');
 
   const handleSend = (e: React.FormEvent) => {

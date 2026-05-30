@@ -928,6 +928,13 @@ Pixel Market BD কখনো শুধুমাত্র বিক্রির �
     }),
     {
       name: 'pixel-market-storage',
+      merge: (persistedState: any, currentState: any) => ({
+        ...currentState,
+        ...persistedState,
+        siteSettings: (persistedState?.siteSettings && typeof persistedState.siteSettings === 'object')
+          ? { ...currentState.siteSettings, ...persistedState.siteSettings }
+          : currentState.siteSettings,
+      })
     }
   )
 );

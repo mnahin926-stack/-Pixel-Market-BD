@@ -137,7 +137,7 @@ export default function WhatsAppCheckoutModal({
 
       // Create WhatsApp message payload strictly as requested by the user
       const fullAddress = `${address.trim()}, ${thanaDistrict.trim()}`;
-      const storeNameLabel = siteSettings.storeName || 'Pixel Market BD';
+      const storeNameLabel = siteSettings?.storeName || 'Pixel Market BD';
 
       let message = `🛒 *New Order - ${storeNameLabel}*\n`;
       message += `👤 *Name:* ${name.trim()}\n`;
@@ -162,7 +162,7 @@ export default function WhatsAppCheckoutModal({
       }
 
       // Format WhatsApp API string
-      const destPhone = (siteSettings.whatsappOrderAlertNumber || '+8801234567890').replace(/[^\d]/g, '');
+      const destPhone = (siteSettings?.whatsappOrderAlertNumber || '+8801234567890').replace(/[^\d]/g, '');
       const waUrl = `https://api.whatsapp.com/send?phone=${destPhone}&text=${encodeURIComponent(message)}`;
 
       // Simulate a small timing window for visual confirmation
@@ -228,8 +228,8 @@ export default function WhatsAppCheckoutModal({
             <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
               <button
                 onClick={() => {
-                  const destPhone = (siteSettings.whatsappOrderAlertNumber || '+8801234567890').replace(/[^\d]/g, '');
-                  const message = `🛒 *New Order - ${siteSettings.storeName || 'Pixel Market BD'}*\n👤 *Name:* ${name}\n📞 *Phone:* ${phone}\n📦 *Product:* ${product.name}\n🔢 *Quantity:* ${quantity}\n💰 *Total:* ${total}৳`;
+                  const destPhone = (siteSettings?.whatsappOrderAlertNumber || '+8801234567890').replace(/[^\d]/g, '');
+                  const message = `🛒 *New Order - ${siteSettings?.storeName || 'Pixel Market BD'}*\n👤 *Name:* ${name}\n📞 *Phone:* ${phone}\n📦 *Product:* ${product.name}\n🔢 *Quantity:* ${quantity}\n💰 *Total:* ${total}৳`;
                   window.open(`https://api.whatsapp.com/send?phone=${destPhone}&text=${encodeURIComponent(message)}`, '_blank');
                 }}
                 className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 px-6 rounded-xl text-sm transition-colors cursor-pointer flex items-center justify-center gap-2 shadow-lg hover:scale-[1.01]"
